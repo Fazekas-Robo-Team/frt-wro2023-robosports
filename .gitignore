@@ -1,5 +1,6 @@
 .DS_Store
 build/**
 toolchain/**
-bin/main
+bin/viktor
+bin/ferenc
 .VSCodeCounter

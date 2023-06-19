@@ -1,3 +1,9 @@
 #!/bin/bash
 
-sudo nice -n -18 ionice -c 1 -n 0 ./main $FRT_ROBOT_ID
+source ~/env.sh
+
+if [ "$FRT_ROBOT_ID" = "ferenc" ]; then
+    ./ferenc
+else
+    ./viktor
+fi

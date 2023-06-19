@@ -1,0 +1,3 @@
+[submodule "frt-gcc-toolchain"]
+	path = frt-gcc-toolchain
+	url = https://github.com/Fazekas-Robo-Team/frt-gcc-toolchain
