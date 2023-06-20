@@ -3,4 +3,5 @@ build/**
 toolchain/**
 bin/viktor
 bin/ferenc
+**/__pycache__
 .VSCodeCounter

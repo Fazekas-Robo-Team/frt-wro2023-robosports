@@ -28,5 +28,3 @@ $(BUILD_DIR)/%.cpp.o: $(SRC_DIR)/%.cpp
 .PHONY: clean
 clean:
 	rm -rf $(BUILD_DIR)
-	rm -rf $(BIN_DIR)/viktor
-	rm -rf $(BIN_DIR)/ferenc
