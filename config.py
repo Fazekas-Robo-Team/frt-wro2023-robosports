@@ -1,5 +1,5 @@
 class Ferenc:
-    host = "ferenc"
+    host = "10.42.0.14"
     port = 22
     username = "robot"
     password = "maker"

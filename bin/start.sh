@@ -1,9 +1,14 @@
 #!/bin/bash
 
+echo "Sourcing env..."
 source ~/env.sh
 
 if [ "$FRT_ROBOT_ID" = "ferenc" ]; then
-    ./ferenc
+    echo "Starting ferenc..."
+    chmod +x ~/bin/ferenc
+    ~/bin/ferenc
 else
-    ./viktor
+    echo "Starting viktor..."
+    chmod +x ~/bin/viktor
+    ~/bin/viktor
 fi
