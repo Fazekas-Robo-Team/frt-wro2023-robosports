@@ -313,10 +313,9 @@ struct HTColorSensorV2::colors {
 
 class GyroSensor : public Sensor
 {
-    protected:
+    public:
         deg base = 0;
 
-    public:
         struct modes
         {
             static constexpr std::string_view angle = "GYRO-ANG";
@@ -330,34 +329,12 @@ class GyroSensor : public Sensor
 
         GyroSensor (const std::string_view port)
         : Sensor(port)
-        {
-            reset();
-        }
+        {}
 
         void reset ()
         {
-            base = get_angle();
-        }
-
-        deg get_angle ()
-        {
-            set_mode(modes::angle);
-            const int value = attributes.value[0].read<int>();
-            return deg(value) - base;
-        }
-
-        deg get_rate ()
-        {
-            set_mode(modes::rate);
-            const int value = attributes.value[0].read<int>();
-            return deg(value);
-        }
-
-        int get_rate_raw ()
-        {
-            set_mode(modes::rate_raw);
-            const int value = attributes.value[0].read<int>();
-            return value;
+            set_mode(modes::angle_and_rate);
+            base = attributes.value[0].read<int>();
         }
 
         struct AngleAndRate
@@ -372,6 +349,20 @@ class GyroSensor : public Sensor
             const int angle = attributes.value[0].read<int>();
             const int rate = attributes.value[1].read<int>();
             return AngleAndRate { deg(angle) - base, deg(rate) };
+        }
+
+        deg get_angle ()
+        {
+            set_mode(modes::angle_and_rate);
+            const int angle = attributes.value[0].read<int>();
+            return deg(angle) - base;
+        }
+
+        deg get_rate ()
+        {
+            set_mode(modes::angle_and_rate);
+            const int rate = attributes.value[1].read<int>();
+            return deg(rate) - base;
         }
 
         deg get_tilt_rate ()

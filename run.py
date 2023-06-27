@@ -68,7 +68,6 @@ try:
         os.system("make clean")
         os.system("FRT_ROBOT_ID=ferenc make")
 
-        
         sync_robot(Ferenc)
 
     if viktor:
@@ -81,12 +80,16 @@ try:
     if ferenc: robots.append(Ferenc)
     if viktor: robots.append(Viktor)
 
+    for r in robots: print(r)
+
     sshs = []
     for robot in robots:
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(Ferenc.host, Ferenc.port, Ferenc.username, Ferenc.password, look_for_keys = False)
+        ssh.connect(robot.host, robot.port, robot.username, robot.password, look_for_keys = False)
         sshs.append(ssh)
+
+    for s in sshs: print(s)
 
     def run(ssh):
         stdin, stdout, stderr = ssh.exec_command("brickrun --redirect bash /home/robot/bin/start.sh")

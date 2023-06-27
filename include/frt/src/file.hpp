@@ -112,7 +112,7 @@ class File
                     return result;
                 } 
                 catch (...) {
-                    if constexpr (!silent) Logger::warning("File::read - read failed");
+                    if constexpr (!silent) Logger::warning("File::read - read from", path, "failed");
                     input_stream.close();
                     input_stream.clear();
                     return read<T>(attempts - 1);
@@ -137,7 +137,7 @@ class File
                 return result;
             } 
             catch (...) {
-                Logger::warning("File::read_line - read failed");
+                Logger::warning("File::read_line - read from", path, "failed");
                 input_stream.close();
                 return read_line(attempts - 1);
             }
@@ -156,11 +156,11 @@ class File
             const auto lock = std::scoped_lock(mutex);
             ensure_output();
 
-            if (output_stream << value) {
+            if (output_stream << value << std::flush) {
                 return;
             }
 
-            Logger::warning("File::write - write failed, ERRNO:", errno);
+            Logger::warning("File::write - write to", path, "failed, ERRNO:", errno);
             output_stream.close();
             return write<T>(value, attempts - 1);
         }

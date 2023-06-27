@@ -1,101 +1,161 @@
 #include "lib.hpp"
 
-using namespace FRT;
-using namespace FRT::unit_literals;
+/*
+TODO:
+- wallbang based on speed
+- wallbang turn
+*/
 
-
-
-void move (const Unit auto segment)
+inline void clearing_corner ()
 {
-    int segment_pulses = left_wheel.units_to_pulses(segment);
-    int direction = (segment_pulses > 0) ? 1 : -1;
-
-    segment_pulses *= direction;
-
-    left_wheel.set_duty_cycle_setpoint(0);
-    right_wheel.set_duty_cycle_setpoint(0);
-
-    left_wheel.run_command(TachoMotor::commands::run_direct);
-    right_wheel.run_command(TachoMotor::commands::run_direct);
-
-    left_wheel.set_stop_action(TachoMotor::stop_actions::brake);
-    right_wheel.set_stop_action(TachoMotor::stop_actions::brake);
-
-    const double left_start = left_wheel.get_position<deg>().value * direction;
-    const double right_start = right_wheel.get_position<deg>().value * direction;
-
-    bool left_on = true, right_on = true;
-
-    const double target_speed = 1050;
-    const double Kp = (direction > 0) ? 0.001 : 0.0001;
-    const double Ki = 0.00001;
-    const double Kd = 0.00002;
-    // high baseline sp, will not start without it
-    double sp = 40, last_error = 0, error_sum = 0;
-
-    while (true) {
-        const double left_pos = (direction * left_wheel.get_position<deg>().value) - left_start;
-        const double right_pos = (direction * right_wheel.get_position<deg>().value) - right_start;
-
-        if (left_on && left_pos > segment_pulses) {
-            left_wheel.stop();
-            left_on = false;
-        }
-
-        if (right_on && right_pos > segment_pulses) {
-            right_wheel.stop();
-            right_on = false;
-        }
-
-        if (!left_on && !right_on) {
-            break;
-        }
-
-        const double speed = (left_wheel.get_speed<deg>().value + right_wheel.get_speed<deg>().value) / 2 * direction;
-        const double speed_error = speed - target_speed;
-
-        const double correction = speed_error * Kp + error_sum * Ki + (speed_error - last_error) * Kd;
-        sp = clamp(sp - correction, -100.0, 100.0);
-        last_error = speed_error;
-        error_sum += speed_error;
-
-        const double diff = (left_pos - right_pos) * 5;
-        const double left_sp = (left_pos > right_pos) ? sp - diff : sp;
-        const double right_sp = (right_pos > left_pos) ? sp + diff : sp;
-
-        if (left_on) {
-            left_wheel.set_duty_cycle_setpoint(left_sp * direction);
-        }
-
-        if (right_on) {
-            right_wheel.set_duty_cycle_setpoint(right_sp * direction);
-        }
-
-        Logger::info(sp, target_speed, speed, left_pos, right_pos, left_sp, right_sp);
-    }
+    move_segment(4cm, 0deg);
+    turn(-90deg);
+    move_wallbang(52cm, -90deg);
+    move_segment(-4cm, -90deg);
+    turn(12deg);
+    unregulated_move(-100, 1000ms);
 }
 
 [[noreturn]] void left_main ()
 {
-    Sound::beep(1000, 100);
-
     left_wheel.set_polarity(TachoMotor::polarities::inversed);
     right_wheel.set_polarity(TachoMotor::polarities::inversed);
-    move(2m);
-    for (;;) {
-        move(115cm);
-        sleep(200ms);
-        move(-115cm);
-        sleep(200ms);
+
+    unregulated_move(-100, 400ms);
+
+    gyro.reset();
+
+    move_wallbang(114cm, 0deg);
+    unregulated_move(70, 200ms);
+    lift_up();
+    unregulated_move(70, 50ms);
+    unregulated_move(-70, 50ms);
+    turn(-10deg);
+    lift_down();
+    move_wallbang(-127cm, -13deg);
+    unregulated_move(-100, 400ms);
+
+    move_wallbang(114cm, 0deg);
+    unregulated_move(70, 200ms);
+    lift_up();
+    unregulated_move(70, 50ms);
+    lift_down();
+    unregulated_move(-70, 50ms);
+    move_wallbang(-127cm, 0deg);
+    unregulated_move(-100, 400ms);
+
+    while (true) {
+        clearing_corner();
+        gyro.reset();
+
+        move_wallbang(114cm, -1.5deg);
+        unregulated_move(70, 200ms);
+        lift_up();
+        unregulated_move(70, 50ms);
+        unregulated_move(-70, 50ms);
+        lift_down();
+        move_wallbang(-130cm, -10deg);
+        unregulated_move(-100, 400ms);
+
+        move_wallbang(114cm, 0deg);
+        unregulated_move(70, 200ms);
+        lift_up();
+        unregulated_move(70, 50ms);
+        unregulated_move(-70, 50ms);
+        lift_down();
+        move_wallbang(-127cm, -10deg);
+        unregulated_move(-100, 400ms);
+
+        move_wallbang(114cm, 2deg);
+        unregulated_move(70, 200ms);
+        lift_up();
+        unregulated_move(70, 50ms);
+        unregulated_move(-70, 50ms);
+        lift_down();
+        move_wallbang(-127cm, 0deg);
+        unregulated_move(-100, 400ms);
     }
 
     exit(EXIT_SUCCESS);
 }
 
+inline void shoot_arm ()
+{
+    arm.set_duty_cycle_setpoint(-100);
+    
+}
+
+inline void collect_arm()
+{
+    arm.set_duty_cycle_setpoint(40);
+}
+
 [[noreturn]] void right_main ()
 {
-    Logger::error("Not implemented.");
-    exit(EXIT_FAILURE);
+    collect_arm();
+    arm.run_command(TachoMotor::commands::run_direct);
+
+    left_wheel.set_polarity(TachoMotor::polarities::normal);
+    right_wheel.set_polarity(TachoMotor::polarities::normal);
+
+    unregulated_move(-100, 400ms);
+
+    gyro.reset();
+
+    arm.set_duty_cycle_setpoint(-100);
+    arm.run_command(TachoMotor::commands::run_direct);
+
+    move_segment(68.5cm, 0deg);
+    move_segment(-5cm, 0deg);
+    turn(-17deg);
+    shoot_arm();
+    move_wallbang(-77cm, -20deg);
+    collect_arm();
+
+    unregulated_move(-100, 400ms);
+
+    move_segment(68.5cm, 0deg);
+    move_segment(-5cm, 0deg);
+    // bacc
+    shoot_arm();
+    turn(20deg);
+    move_wallbang(-77cm, 25deg);
+    collect_arm();
+
+    turn(0deg);
+    while (true) {
+        unregulated_move(-100, 400ms);
+        move_segment(3.5cm, 0deg);
+        turn(90deg);
+        move_segment(-15cm, 90deg);
+        move_wallbang(65cm, 90deg);
+        move_segment(-7cm, 90deg);
+        turn(-25deg);
+        unregulated_move(-100, 600ms);
+
+        move_wallbang(68.5cm, 1deg);
+        shoot_arm();
+        move_wallbang(-75cm, 8.5deg);
+        collect_arm();
+        unregulated_move(-100, 400ms);
+
+        gyro.reset();
+        Logger::info(gyro.get_angle(), gyro.base);
+
+
+        move_wallbang(68.5cm, 0deg);
+        shoot_arm();
+        move_wallbang(-75cm, 8.5deg);
+        collect_arm();
+        unregulated_move(-100, 400ms);
+
+        move_wallbang(68.5cm, -2deg);
+        shoot_arm();
+        move_wallbang(-75cm, 0deg);
+        collect_arm();
+    }
+
+    exit(EXIT_SUCCESS);
 }
 
 int main () 
@@ -103,6 +163,11 @@ int main ()
     std::ios_base::sync_with_stdio(false);
     std::cin.tie(nullptr);
     std::cout.tie(nullptr);
+
+    gyro.set_mode(GyroSensor::modes::calibration);
+    sleep(150ms);
+    gyro.set_mode(GyroSensor::modes::angle_and_rate);
+    sleep(150ms);
 
     #if FRT_ROBOT_ID == 0
     left_main();

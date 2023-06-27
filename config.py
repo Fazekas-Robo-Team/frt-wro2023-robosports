@@ -5,7 +5,7 @@ class Ferenc:
     password = "maker"
 
 class Viktor:
-    host = None
+    host = "10.42.0.223"
     port = 22
     username = "robot"
     password = "maker"
